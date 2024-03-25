@@ -1,21 +1,31 @@
 #include <stdio.h>
 #include <omp.h>
 
-int main() {
-    int num_threads = omp_get_max_threads();
-    int num_iterations = 10;
+#define NUM_ITERATIONS 10
 
-    printf("Number of threads: %d\n", num_threads);
-    printf("Number of iterations: %d\n", num_iterations);
-    printf("Default scheduling: dynamic\n");
+int main() {
+    int num_threads;
+
+    printf("Enter the number of threads: ");
+    scanf("%d", &num_threads);
+
+    omp_set_num_threads(num_threads);
 
     #pragma omp parallel
     {
         int thread_id = omp_get_thread_num();
-        #pragma omp for
-        for (int i = 0; i < num_iterations; i++) {
-            printf("Thread %d: Iteration %d\n", thread_id, i);
+        printf("Thread %d:", thread_id);
+
+        int iterations_per_thread = NUM_ITERATIONS / num_threads;
+        int start = thread_id * iterations_per_thread;
+        int end = (thread_id == num_threads - 1) ? NUM_ITERATIONS : start + iterations_per_thread;
+
+        for (int i = start; i < end; i++) {
+            printf("Iteration %d", i);
+            if (i != end - 1) printf(", ");
         }
+
+        printf("\n");
     }
 
     return 0;
