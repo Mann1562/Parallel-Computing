@@ -1,59 +1,36 @@
+#include <iostream>
 #include <string>
 #include <sstream>
-#include <vector>
-#include <iostream>
-#include <omp.h>
 
-std::vector<std::string> tokenize(const std::string& input, char delimiter) {
-    std::vector<std::string> tokens;
-    std::istringstream iss(input);
-    std::string token;
-
-    while (std::getline(iss, token, delimiter)) {
-        tokens.push_back(token);
+// Custom strtok_r_keep function
+std::string strtok_r_keep(std::string& str, const std::string& delim, size_t& pos) {
+    size_t start = str.find_first_not_of(delim, pos);
+    if (start == std::string::npos) {
+        pos = str.length();
+        return "";
     }
 
-    return tokens;
-}
-
-std::vector<std::string> parallel_tokenize(const std::string& input, char delimiter) {
-    std::vector<std::string> result;
-    std::istringstream iss(input);
-    std::string token;
-    
-    #pragma omp parallel private(token) shared(result)
-    {
-        #pragma omp for schedule(static)
-        for (size_t i = 0; i < input.size(); ++i) {
-            if (input[i] == delimiter) {
-                #pragma omp critical
-                {
-                    result.push_back(token);
-                    token.clear();
-                }
-            } else {
-                token += input[i];
-            }
-        }
-        
-        // Add the last token
-        #pragma omp critical
-        {
-            result.push_back(token);
-        }
+    size_t end = str.find_first_of(delim, start);
+    if (end == std::string::npos) {
+        pos = str.length();
+        return str.substr(start);
     }
 
-    return result;
+    pos = end;
+    return str.substr(start, end - start);
 }
 
 int main() {
-    std::string input = "I M BATMAN.";
-    char delimiter = ' ';
+    std::string str = "I M BATMAN";
+    std::string delim = " ";
+    size_t pos = 0;
 
-    std::vector<std::string> tokens = parallel_tokenize(input, delimiter);
-
-    for (const auto& token : tokens) {
-        std::cout << token << std::endl;
+    while (true) {
+        std::string token = strtok_r_keep(str, delim, pos);
+        if (token.empty()) {
+            break;
+        }
+        std::cout << token << "\n";
     }
 
     return 0;
