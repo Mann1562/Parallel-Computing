@@ -6,7 +6,6 @@
 // UNCOMMENT THE CODE BELOW TO SEE THE SORTING WITHOUT ANY BENCHMARKING
 */
 
-
 // #include <stdio.h>
 // #include <stdlib.h>
 // #include <mpi.h>
@@ -101,17 +100,20 @@
 #define MASTER 0
 
 // Function to compare integers (for qsort)
-int compare_integers(const void *a, const void *b) {
+int compare_integers(const void *a, const void *b)
+{
     return (*(int *)a - *(int *)b);
 }
 
 // Function to perform PSRS algorithm
-void psrs(int *data, int n, int *sorted_data) {
+void psrs(int *data, int n, int *sorted_data)
+{
     // Step 1: Local sorting
     qsort(data, n, sizeof(int), compare_integers);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     int rank, size;
     int *data = NULL;
     int *sorted_data = NULL;
@@ -123,12 +125,15 @@ int main(int argc, char *argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     // Define ranges for p and n
-    int min_p = 2, max_p = 8; // Example range for p
+    int min_p = 2, max_p = 8;        // Example range for p
     int min_n = 1000, max_n = 10000; // Example range for n
 
-    for (int p = min_p; p <= max_p; p++) {
-        for (int n = min_n; n <= max_n; n += 1000) {
-            if (rank == MASTER) {
+    for (int p = min_p; p <= max_p; p++)
+    {
+        for (int n = min_n; n <= max_n; n += 1000)
+        {
+            if (rank == MASTER)
+            {
                 printf("Running with p = %d, n = %d\n", p, n);
             }
 
@@ -144,7 +149,8 @@ int main(int argc, char *argv[]) {
             // For simplicity, we'll generate random data here
             srand(time(NULL) + rank);
             data = (int *)malloc(n * sizeof(int));
-            for (int i = 0; i < n; i++) {
+            for (int i = 0; i < n; i++)
+            {
                 data[i] = rand() % 1000;
             }
 
@@ -155,8 +161,9 @@ int main(int argc, char *argv[]) {
             // Sort scattered data individually on each processor
             qsort(scattered_data, n / size, sizeof(int), compare_integers);
 
-            // Merge sorted data on master process
-            if (rank == MASTER) {
+            // Allocate memory for sorted data on master process
+            if (rank == MASTER)
+            {
                 sorted_data = (int *)malloc(n * sizeof(int));
             }
 
@@ -164,25 +171,40 @@ int main(int argc, char *argv[]) {
             MPI_Gather(scattered_data, n / size, MPI_INT, sorted_data, n / size, MPI_INT, MASTER, MPI_COMM_WORLD);
 
             // Perform PSRS algorithm on merged sorted data (only on master process)
-            if (rank == MASTER) {
+            if (rank == MASTER)
+            {
                 psrs(sorted_data, n, sorted_data);
             }
 
             // Stop the timer
             end_time = MPI_Wtime();
 
+            // Output the sorted data (on all processes)
+            // printf("Sorted Data: ");
+            // for (int i = 0; i < n; i++) {
+            //     printf("%d ", sorted_data[i]);
+            // }
+            // printf("\n");
+
             // Output the execution time (only on master process)
-            if (rank == MASTER) {
+            if (rank == MASTER)
+            {
                 printf("Execution time: %f seconds\n", end_time - start_time);
             }
 
             // Free memory
             free(data);
             free(scattered_data);
-            if (rank == MASTER) {
+            if (rank == MASTER)
+            {
                 free(sorted_data);
             }
         }
+         if (rank == MASTER)
+            {
+                printf("End of program.\n");
+                printf("If you want to print the sorted array you can uncomment lines 183-187.\n");
+            }
     }
 
     MPI_Finalize();
